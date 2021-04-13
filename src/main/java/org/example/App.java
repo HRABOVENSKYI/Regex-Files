@@ -3,18 +3,21 @@ package org.example;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class App {
     public static void main(String[] args) {
         // If file is in root of project, you can just write its name
-        String FILE_LOCATION = "D:\\intellij-idea-projects\\RegularExpressions\\access_log_Jul95";
+        String FILE_LOCATION1 = "D:\\intellij-idea-projects\\RegularExpressions\\access_log_Jul95";
+        String FILE_LOCATION2 = "D:\\English\\text.txt";
 
         /*
           Print file
          */
-        printFile(FILE_LOCATION);
+//        printFile(FILE_LOCATION1);
 
         /*
           IP Address
@@ -36,9 +39,14 @@ public class App {
 //        System.out.println(getCountOfExpressionsUsingRegExAndContains(FILE_LOCATION, dateTimeRegEx, date));
         // Faster, but less accurate (neglect the moment when dateTime is in URL)
 //        System.out.println(getCountOfExpressionsUsingContains(FILE_LOCATION, date));
+
+        /*
+          Most repeated word
+        */
+        printMap(findCountOfWordsInFIle(FILE_LOCATION2));
     }
 
-    private static int getCountOfExpressionsUsingRegExAndContains(String FILE_LOCATION, String dateTimeRegEx, String date) {
+    public static int getCountOfExpressionsUsingRegExAndContains(String FILE_LOCATION, String dateTimeRegEx, String date) {
         try {
             FileReader fileReader = new FileReader(FILE_LOCATION);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -68,7 +76,7 @@ public class App {
         return 0;
     }
 
-    private static int getCountOfExpressionsUsingRegEx(String fileLocation, String regEx, String ipAddress) {
+    public static int getCountOfExpressionsUsingRegEx(String fileLocation, String regEx, String ipAddress) {
         try {
             FileReader fileReader = new FileReader(fileLocation);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -96,7 +104,7 @@ public class App {
         return 0;
     }
 
-    private static int getCountOfExpressionsUsingContains(String fileLocation, String ipAddress) {
+    public static int getCountOfExpressionsUsingContains(String fileLocation, String ipAddress) {
         try {
             FileReader fileReader = new FileReader(fileLocation);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -121,7 +129,7 @@ public class App {
         return 0;
     }
 
-    private static void printFile(String fileLocation) {
+    public static void printFile(String fileLocation) {
         try {
             FileReader fileReader = new FileReader(fileLocation);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -137,5 +145,65 @@ public class App {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static Map<String, String> findCountOfWordsInFIle(String fileLocation) {
+
+        String line, word = "";
+        int count = 0, maxCount = 0;
+        ArrayList<String> words = new ArrayList<>();
+        Map<String, String> wordMap = new HashMap<>();
+
+        try {
+            // Opens file in read mode
+            FileReader file = new FileReader(fileLocation);
+            BufferedReader br = new BufferedReader(file);
+
+            //Reads each line
+            while ((line = br.readLine()) != null) {
+                String[] wordArr = line.toLowerCase().split("([,.*/\\-\\s\\d]+)");
+                //Adding all words generated in previous step into words
+                Collections.addAll(words, wordArr);
+            }
+
+            while (!words.isEmpty()) {
+                String currentWord = words.get(0);
+                int currentWordCount = 1;
+                for (int i = 1; i < words.size(); i++) {
+                    if (words.get(i).equals(currentWord)) {
+                        currentWordCount++;
+                    }
+                }
+                wordMap.put(currentWord, String.format("%d", currentWordCount));
+                while (words.contains(currentWord))
+                    words.remove(currentWord);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return wordMap;
+    }
+
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map, boolean reverse) {
+        List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        if (reverse)
+            list.sort(Collections.reverseOrder(Map.Entry.comparingByValue())); // DESC
+        else
+            list.sort(Map.Entry.comparingByValue()); // ASC
+
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+
+        return result;
+    }
+
+    public static void printMap(Map<String, String> map) {
+        String sortedAndFormattedMap = sortByValue(map, false).entrySet().stream()
+                .map(e -> "Word: " + e.getKey() + "\t\t" + "Count: " + e.getValue())
+                .collect(Collectors.joining("\n"));
+        System.out.println(sortedAndFormattedMap);
     }
 }
